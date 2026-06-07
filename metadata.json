@@ -1,0 +1,8 @@
+{
+  "name": "Mr. Spark - Kids English",
+  "description": "A fun, interactive English learning app for kids with AI-powered word generation, images, and quizzes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

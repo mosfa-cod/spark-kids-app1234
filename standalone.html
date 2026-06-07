@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Spark - Kids English</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Scrollbar Hide */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Animations */
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ICONS (SVG Components) ---
+        const Icon = ({ path, size = 24, className = "" }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {path}
+            </svg>
+        );
+
+        const Icons = {
+            Search: (props) => <Icon path={<><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>} {...props} />,
+            Home: (props) => <Icon path={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} {...props} />,
+            BookOpen: (props) => <Icon path={<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>} {...props} />,
+            Settings: (props) => <Icon path={<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>} {...props} />,
+            Volume2: (props) => <Icon path={<><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></>} {...props} />,
+            Sun: (props) => <Icon path={<><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></>} {...props} />,
+            Moon: (props) => <Icon path={<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>} {...props} />,
+            User: (props) => <Icon path={<><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>} {...props} />,
+            Trash2: (props) => <Icon path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></>} {...props} />,
+            Lock: (props) => <Icon path={<><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} {...props} />,
+            CheckCircle: (props) => <Icon path={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></>} {...props} />,
+            Loader2: (props) => <Icon path={<path d="M21 12a9 9 0 1 1-6.219-8.56"/>} {...props} />,
+            X: (props) => <Icon path={<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>} {...props} />,
+        };
+
+        // --- SERVICES ---
+        // Using Pollinations.ai for images to avoid complex Auth in standalone file
+        // Using Gemini API via fetch for text
+        
+        const generateWord = async (arabicWord, apiKey) => {
+            if (!apiKey) throw new Error("API Key Required");
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Translate this Arabic word/phrase to a single English word suitable for a child. Input: "${arabicWord}". Return ONLY the English word. No punctuation.` }] }]
+                })
+            });
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "Spark";
+        };
+
+        const generateStory = async (word, apiKey) => {
+            if (!apiKey) throw new Error("API Key Required");
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Write a very short, simple story (max 2 sentences) for a child using the word "${word}". The story should be in English, and also provide an Arabic translation. Return ONLY a valid JSON object in this format: {"en": "English story", "ar": "Arabic translation"}. Do not use markdown.` }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                })
+            });
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            return JSON.parse(text);
+        };
+
+        // --- COMPONENTS ---
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('home');
+            const [inputWord, setInputWord] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [result, setResult] = useState(null);
+            const [story, setStory] = useState(null);
+            const [storyLoading, setStoryLoading] = useState(false);
+            const [isDarkMode, setIsDarkMode] = useState(false);
+            const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
+
+            const TOPICS = [
+                { id: 'animals', label: '🦁 حيوانات', color: 'bg-orange-100 text-orange-600 border-orange-200' },
+                { id: 'space', label: '🚀 فضاء', color: 'bg-indigo-100 text-indigo-600 border-indigo-200' },
+                { id: 'food', label: '🍎 طعام', color: 'bg-red-100 text-red-600 border-red-200' },
+                { id: 'nature', label: '🌳 طبيعة', color: 'bg-green-100 text-green-600 border-green-200' },
+            ];
+
+            const LESSONS = [
+                { id: 1, title: 'Level 1: Animals', subtitle: 'تعلم أسماء الحيوانات', color: 'bg-green-500', locked: false, progress: 100 },
+                { id: 2, title: 'Level 2: Colors', subtitle: 'الألوان الأساسية', color: 'bg-blue-500', locked: false, progress: 40 },
+                { id: 3, title: 'Level 3: Family', subtitle: 'أفراد العائلة', color: 'bg-purple-500', locked: true, progress: 0 },
+            ];
+
+            useEffect(() => {
+                const savedTheme = localStorage.getItem('spark_theme');
+                if (savedTheme === 'dark') setIsDarkMode(true);
+            }, []);
+
+            const toggleTheme = () => {
+                const newMode = !isDarkMode;
+                setIsDarkMode(newMode);
+                localStorage.setItem('spark_theme', newMode ? 'dark' : 'light');
+            };
+
+            const saveApiKey = (key) => {
+                setApiKey(key);
+                localStorage.setItem('gemini_api_key', key);
+            };
+
+            const speak = (text) => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            };
+
+            const handleSearch = async (e) => {
+                e?.preventDefault();
+                if (!inputWord.trim()) return;
+                if (!apiKey) { alert("Please enter your Gemini API Key in Settings first!"); setActiveTab('settings'); return; }
+
+                setLoading(true);
+                setResult(null);
+                setStory(null);
+
+                try {
+                    const enWord = await generateWord(inputWord, apiKey);
+                    // Use Pollinations for image
+                    const imgUrl = `https://image.pollinations.ai/prompt/cute 3d pixar style illustration of ${enWord} white background?width=512&height=512&nologo=true&seed=${Math.random()}`;
+                    
+                    // Preload image
+                    const img = new Image();
+                    img.src = imgUrl;
+                    img.onload = () => {
+                        setResult({ en: enWord, ar: inputWord, img: imgUrl });
+                        setLoading(false);
+                    };
+                } catch (error) {
+                    console.error(error);
+                    alert("Error: " + error.message);
+                    setLoading(false);
+                }
+            };
+
+            const generateStoryForWord = async () => {
+                if (!result) return;
+                setStoryLoading(true);
+                try {
+                    const data = await generateStory(result.en, apiKey);
+                    setStory(data);
+                    speak(data.en);
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    setStoryLoading(false);
+                }
+            };
+
+            return (
+                <div className={`w-full max-w-[375px] h-[800px] bg-[#f8fafc] rounded-[3rem] border-[12px] border-slate-900 relative overflow-hidden flex flex-col shadow-2xl ring-8 ring-black/5 transition-all duration-700 ${isDarkMode ? 'dark bg-slate-900' : ''}`}>
+                    
+                    {/* Dynamic Background */}
+                    {result?.img && (
+                        <div className="absolute inset-0 z-0">
+                            <img src={result.img} className="w-full h-full object-cover opacity-20 blur-sm scale-110 transition-opacity duration-1000" />
+                            <div className={`absolute inset-0 bg-gradient-to-b ${isDarkMode ? 'from-slate-900/90 via-slate-900/80 to-slate-900/90' : 'from-white/90 via-white/80 to-white/90'}`}></div>
+                        </div>
+                    )}
+
+                    {/* Status Bar */}
+                    <div className="flex justify-between px-10 pt-6 items-center select-none relative z-10">
+                        <div className={`w-3 h-3 rounded-full ${isDarkMode ? 'bg-white' : 'bg-black'}`}></div>
+                        <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>12:21</span>
+                    </div>
+
+                    {/* Header */}
+                    {activeTab === 'home' && (
+                        <div className="px-8 pt-6 pb-4 flex items-center justify-between select-none relative z-10">
+                            <div className="text-right">
+                                <h1 className={`text-3xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>مرحباً، <br/>بطلنا الصغير! ✨</h1>
+                                <p className="text-slate-400 text-sm font-medium mt-1">جاهز لتعلم الإنجليزية؟</p>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-orange-100 border-orange-400'}`}>
+                                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=spark" className="w-10 h-10" />
+                                </div>
+                                <button onClick={toggleTheme} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${isDarkMode ? 'bg-slate-800 text-yellow-400' : 'bg-slate-100 text-slate-400'}`}>
+                                    {isDarkMode ? <Icons.Sun size={20} /> : <Icons.Sun size={20} />}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col relative z-10">
+                        {activeTab === 'home' && (
+                            <>
+                                <div className="px-6 py-4 space-y-3">
+                                    <form onSubmit={handleSearch} className="flex items-center gap-2">
+                                        <button type="submit" disabled={loading} className="bg-blue-500 text-white p-4 rounded-2xl shadow-lg transition-transform active:scale-95 disabled:opacity-70">
+                                            {loading ? <Icons.Loader2 className="animate-spin" /> : <Icons.Search />}
+                                        </button>
+                                        <div className={`flex-1 p-4 rounded-2xl border-2 flex items-center justify-between shadow-inner transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                                            <input 
+                                                type="text" 
+                                                value={inputWord}
+                                                onChange={(e) => setInputWord(e.target.value)}
+                                                placeholder="اكتب كلمة..." 
+                                                className={`bg-transparent outline-none w-full text-right font-bold ${isDarkMode ? 'text-white placeholder-slate-600' : 'text-slate-700 placeholder-slate-300'}`}
+                                            />
+                                        </div>
+                                    </form>
+                                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                        {TOPICS.map(t => (
+                                            <button key={t.id} onClick={() => { setInputWord(t.label.split(' ')[1]); }} className={`px-4 py-2 rounded-full text-xs font-bold border whitespace-nowrap ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300' : t.color}`}>
+                                                {t.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="px-6 space-y-4 pb-10">
+                                    {loading && (
+                                        <div className={`border-4 rounded-[2.5rem] p-8 shadow-xl text-center flex flex-col items-center justify-center min-h-[200px] ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-blue-100'}`}>
+                                            <Icons.Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                                            <p className="text-slate-400 font-bold animate-pulse">جاري تحضير السحر...</p>
+                                        </div>
+                                    )}
+
+                                    {!loading && result && (
+                                        <div className={`border-4 rounded-[2.5rem] p-4 shadow-xl text-center relative fade-in ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-blue-100'}`}>
+                                            <button onClick={() => { setResult(null); setInputWord(''); setStory(null); }} className={`absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10 ${isDarkMode ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                                                <Icons.X size={16} />
+                                            </button>
+                                            <div className={`w-full h-44 rounded-[2rem] mb-4 overflow-hidden flex items-center justify-center relative ${isDarkMode ? 'bg-slate-900' : 'bg-slate-100'}`}>
+                                                <img src={result.img} className="w-full h-full object-cover" />
+                                            </div>
+                                            <h2 className={`text-3xl font-black uppercase italic mb-1 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{result.en}</h2>
+                                            <p className="text-slate-400 font-bold mb-3">{result.ar}</p>
+                                            
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button onClick={() => speak(result.en)} className={`py-3 rounded-2xl font-black flex items-center justify-center gap-2 border-2 transition-colors ${isDarkMode ? 'bg-slate-700 text-blue-400 border-slate-600 hover:bg-slate-600' : 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100'}`}>
+                                                    <Icons.Volume2 size={20} /> نطق
+                                                </button>
+                                                <button onClick={generateStoryForWord} disabled={storyLoading} className={`py-3 rounded-2xl font-black flex items-center justify-center gap-2 border-2 transition-colors ${isDarkMode ? 'bg-slate-700 text-purple-400 border-slate-600 hover:bg-slate-600' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}>
+                                                    {storyLoading ? <Icons.Loader2 size={20} className="animate-spin" /> : <><Icons.BookOpen size={20} /> قصة</>}
+                                                </button>
+                                            </div>
+
+                                            {story && (
+                                                <div className={`mt-4 p-4 rounded-2xl border text-right fade-in ${isDarkMode ? 'bg-slate-700/50 border-slate-600' : 'bg-purple-50 border-purple-100'}`}>
+                                                    <p className={`font-medium text-sm leading-relaxed mb-2 ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`} dir="ltr">{story.en}</p>
+                                                    <p className={`font-bold text-sm leading-relaxed border-t pt-2 ${isDarkMode ? 'text-purple-400 border-slate-600' : 'text-purple-600 border-purple-200'}`}>{story.ar}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {activeTab === 'lessons' && (
+                            <div className="px-6 py-6 space-y-6">
+                                <div className="text-center mb-6">
+                                    <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>رحلة التعلم 🗺️</h2>
+                                    <p className="text-slate-400 text-sm">أكمل المستويات لتصبح بطلاً!</p>
+                                </div>
+                                <div className="space-y-4">
+                                    {LESSONS.map(l => (
+                                        <div key={l.id} className={`p-6 rounded-[2rem] text-white shadow-lg relative overflow-hidden ${l.locked ? (isDarkMode ? 'bg-slate-700' : 'bg-slate-300') : l.color}`}>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                                                    {l.locked ? <Icons.Lock size={24} /> : <Icons.BookOpen size={24} />}
+                                                </div>
+                                                {l.progress === 100 && <div className="bg-white text-green-500 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">مكتمل <Icons.CheckCircle size={12} /></div>}
+                                            </div>
+                                            <h3 className="text-xl font-bold mb-1">{l.title}</h3>
+                                            <p className="text-white/80 text-sm mb-4">{l.subtitle}</p>
+                                            {!l.locked && <div className="w-full bg-black/10 h-2 rounded-full overflow-hidden"><div className="bg-white h-full rounded-full" style={{width: `${l.progress}%`}}></div></div>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'settings' && (
+                            <div className="px-6 py-6 space-y-4">
+                                <div className="text-center mb-8">
+                                    <div className={`w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center border-4 shadow-lg ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-white'}`}>
+                                        <Icons.User size={40} className="text-slate-400" />
+                                    </div>
+                                    <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>البطل الصغير</h2>
+                                </div>
+
+                                <div className={`p-4 rounded-2xl border shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                                    <label className={`block text-xs font-bold mb-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Gemini API Key</label>
+                                    <input 
+                                        type="password" 
+                                        value={apiKey}
+                                        onChange={(e) => saveApiKey(e.target.value)}
+                                        placeholder="Enter your API Key here..."
+                                        className={`w-full p-3 rounded-xl outline-none border ${isDarkMode ? 'bg-slate-900 border-slate-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-2">Required for AI features.</p>
+                                </div>
+
+                                <div className={`p-4 rounded-2xl border shadow-sm flex items-center justify-between ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-xl ${isDarkMode ? 'bg-slate-700 text-blue-400' : 'bg-blue-100 text-blue-600'}`}><Icons.Volume2 size={20} /></div>
+                                        <span className={`font-bold ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>الأصوات</span>
+                                    </div>
+                                    <div className="w-12 h-6 bg-green-400 rounded-full relative"><div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 shadow-sm"></div></div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Bottom Nav */}
+                    <div className={`mt-auto border-t p-4 pb-8 flex justify-around items-center relative z-10 rounded-b-[2.5rem] ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+                        <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center gap-1 ${activeTab === 'settings' ? (isDarkMode ? 'text-blue-400' : 'text-blue-500') : 'text-slate-400'}`}>
+                            <Icons.Settings size={24} strokeWidth={activeTab === 'settings' ? 2.5 : 2} />
+                            <span className="text-[10px] font-bold">الإعدادات</span>
+                        </button>
+                        <button onClick={() => setActiveTab('lessons')} className={`flex flex-col items-center gap-1 ${activeTab === 'lessons' ? (isDarkMode ? 'text-blue-400' : 'text-blue-500') : 'text-slate-400'}`}>
+                            <Icons.BookOpen size={24} strokeWidth={activeTab === 'lessons' ? 2.5 : 2} />
+                            <span className="text-[10px] font-bold">الدروس</span>
+                        </button>
+                        <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 ${activeTab === 'home' ? (isDarkMode ? 'text-blue-400' : 'text-blue-500') : 'text-slate-400'}`}>
+                            <Icons.Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
+                            <span className="text-[10px] font-bold">الرئيسية</span>
+                        </button>
+                    </div>
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

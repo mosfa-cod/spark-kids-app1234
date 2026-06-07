@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap');
+
+@theme {
+  --font-tajawal: "Tajawal", sans-serif;
+}
+
+body {
+  font-family: var(--font-tajawal);
+  background-color: #e2e8f0; /* slate-200 */
+  user-select: none;
+}
+
+@utility scrollbar-hide {
+  /* IE and Edge */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
