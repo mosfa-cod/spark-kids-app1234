@@ -231,9 +231,7 @@ export default function App() {
       // Auto-speak English feedback first, then the word itself as reinforcement
       speak(phrase.en, 'en');
       
-      setTimeout(() => {
-        setActiveModal(null);
-      }, 3500);
+      // Removed auto-close to let user click "Next Question" or manually dismiss!
     } else {
       const nextAttempts = quizWrongAttempts + 1;
       setQuizWrongAttempts(nextAttempts);
@@ -662,6 +660,16 @@ export default function App() {
                         📢 Voice English
                       </button>
                     </div>
+
+                    {quizFeedback.type === 'success' && (
+                      <button 
+                        type="button"
+                        onClick={startQuiz}
+                        className="mt-2 w-full bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 text-white font-Tajawal font-black py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md text-sm"
+                      >
+                        🔄 سؤال جديد! أريد تكرار اللعبة 🚀
+                      </button>
+                    )}
                   </motion.div>
                 )}
 
@@ -756,6 +764,16 @@ export default function App() {
                           فشلت قراءة القصة السحرية
                         </div>
                       )}
+                    </div>
+
+                    <div className="pt-3 border-t border-purple-100 dark:border-purple-900/30">
+                      <button 
+                        type="button"
+                        onClick={startQuiz}
+                        className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-Tajawal font-black py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md text-sm"
+                      >
+                        🔄 فهمت الكلمة! أعطني سؤالاً جديداً 🚀
+                      </button>
                     </div>
                   </motion.div>
                 )}
